@@ -5,6 +5,11 @@ import java.awt.event.KeyEvent;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+
+/**
+ * Эмулятор консоли с графическим интерфейсом на Swing.
+ * Поддерживает команды ls, cd и exit.
+ */
 public class ConsoleApp {
     private final JTextArea textArea;
     private final JTextField inputField;
@@ -14,64 +19,88 @@ public class ConsoleApp {
     private static final int FRAME_WIDTH = 800;
     private static final int FONT_SIZE = 14;
 
+    /**
+     * Создаёт окно эмулятора, инициализирует компоненты
+     * и подписывается на события ввода.
+     */
     public ConsoleApp() {
         String username = System.getProperty("user.name");
-        String hostname;
-
-        try {
-            hostname = InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            hostname = "localhost";
-        }
+        String hostname = resolveHostname();
         String frameName = "Эмулятор - " + username + "@" + hostname;
         user = username + "@" + hostname + ":";
 
-        JFrame frame = new JFrame(frameName);
+        JFrame frame = createFrame(frameName);
+        textArea = createTextArea();
+        inputField = createInputField();
+
+        frame.add(new JScrollPane(textArea), BorderLayout.CENTER);
+        frame.add(createInputPanel(), BorderLayout.SOUTH);
+
+        setupEnterListener();
+        textArea.append("Console!\n");
+
+        frame.setVisible(true);
+        inputField.requestFocusInWindow();
+    }
+
+    private String resolveHostname() {
+        try {
+            return InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            return "localhost";
+        }
+    }
+
+    private JFrame createFrame(String title) {
+        JFrame frame = new JFrame(title);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
         frame.setLayout(new BorderLayout());
+        return frame;
+    }
 
-        textArea = new JTextArea();
-        textArea.setBackground(Color.BLACK);
-        textArea.setForeground(Color.GREEN);
-        textArea.setCaretColor(Color.GREEN);
-        textArea.setFont(new Font("Monospaced", Font.PLAIN, FONT_SIZE));
-        textArea.setEditable(false);
+    private JTextArea createTextArea() {
+        JTextArea area = new JTextArea();
+        area.setBackground(Color.BLACK);
+        area.setForeground(Color.GREEN);
+        area.setCaretColor(Color.GREEN);
+        area.setFont(new Font("Monospaced", Font.PLAIN, FONT_SIZE));
+        area.setEditable(false);
+        return area;
+    }
 
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        frame.add(scrollPane, BorderLayout.CENTER);
+    private JTextField createInputField() {
+        JTextField field = new JTextField();
+        field.setBackground(Color.BLACK);
+        field.setForeground(Color.WHITE);
+        field.setCaretColor(Color.WHITE);
+        field.setFont(new Font("Monospaced", Font.PLAIN, FONT_SIZE));
+        field.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.DARK_GRAY));
+        return field;
+    }
 
-        inputField = new JTextField();
-        inputField.setBackground(Color.BLACK);
-        inputField.setForeground(Color.WHITE);
-        inputField.setCaretColor(Color.WHITE);
-        inputField.setFont(new Font("Monospaced", Font.PLAIN, FONT_SIZE));
-        inputField.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.DARK_GRAY));
+    private JPanel createInputPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        JLabel prompt = new JLabel(user);
+        prompt.setBackground(Color.BLACK);
+        prompt.setForeground(Color.CYAN);
+        prompt.setOpaque(true);
+        prompt.setFont(new Font("Monospaced", Font.PLAIN, FONT_SIZE));
+        panel.add(prompt, BorderLayout.WEST);
+        panel.add(inputField, BorderLayout.CENTER);
+        return panel;
+    }
 
-        JPanel inputPanel = new JPanel(new BorderLayout());
-        JLabel promptLabel = new JLabel(user);
-        promptLabel.setBackground(Color.BLACK);
-        promptLabel.setForeground(Color.CYAN);
-        promptLabel.setOpaque(true);
-        promptLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SIZE));
-
-        inputPanel.add(promptLabel, BorderLayout.WEST);
-        inputPanel.add(inputField, BorderLayout.CENTER);
-        frame.add(inputPanel, BorderLayout.SOUTH);
-
+    private void setupEnterListener() {
         inputField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    String command = inputField.getText().trim();
-                    processCommand(command);
+                    processCommand(inputField.getText().trim());
                     inputField.setText("");
                 }
             }
         });
-        textArea.append("Console!\n");
-        frame.setVisible(true);
-        inputField.requestFocusInWindow();
     }
 
 
@@ -85,11 +114,11 @@ public class ConsoleApp {
         switch (getCommand(command.toLowerCase())) {
                 case "ls":
                     textArea.append("ls\n");
-                    textArea.append((argument != null ? getArguments(command) : "Command Error!") + "\n");
+                    textArea.append((argument != null ? argument: "Command Error!") + "\n");
                     break;
                 case "cd":
                     textArea.append("cd\n");
-                    textArea.append((argument != null ? getArguments(command) : "Command Error!") + "\n");
+                    textArea.append((argument != null ? argument : "Command Error!") + "\n");
                     break;
                 case "exit":
                     System.exit(0);
@@ -118,8 +147,13 @@ public class ConsoleApp {
         if(argument.isEmpty()) return null;
         return argument;
     }
-
-    private String parser(String command){
+    /**
+     * Извлекает текст, заключённый в двойные кавычки.
+     *
+     * @param command строка для разбора
+     * @return содержимое кавычек или {@code null}, если кавычек нет
+     */
+    private String parse(String command){
         if (command == null) return null;
         int start = command.indexOf('"');
         if (start == -1) return null;
