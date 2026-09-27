@@ -142,8 +142,9 @@ public class ConsoleApp {
     }
 
     private String getArguments(String command){
-        if(!command.contains(" "))return null;
-        String argument = command.substring(command.indexOf(" ")+1);
+        String argument = parseQuoted(command);
+        if(argument != null)return argument;
+        argument = command.substring(command.indexOf(" ")+1);
         if(argument.isEmpty()) return null;
         return argument;
     }
@@ -153,7 +154,7 @@ public class ConsoleApp {
      * @param command строка для разбора
      * @return содержимое кавычек или {@code null}, если кавычек нет
      */
-    private String parse(String command){
+    private String parseQuoted (String command){
         if (command == null) return null;
         int start = command.indexOf('"');
         if (start == -1) return null;
