@@ -142,6 +142,7 @@ public class ConsoleApp {
     }
 
     private String getArguments(String command){
+        if(!command.contains(" ")) return null;
         String argument = parseQuoted(command);
         if(argument != null)return argument;
         argument = command.substring(command.indexOf(" ")+1);
