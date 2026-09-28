@@ -13,9 +13,9 @@
 Эмулятор - roman@DESKTOP-ABC:
 
 ls
-ls
+Command Error!
 
-ls "Моя папка" "файл.txt"
+ls "Моя папка файл.txt"
 ls Моя папка файл.txt
 
 cd /home/user
