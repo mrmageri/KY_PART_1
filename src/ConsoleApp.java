@@ -125,7 +125,11 @@ public class ConsoleApp {
                     break;
                 case "cd":
                     textArea.append("cd\n");
-                    textArea.append((argument != null ? argument : "Command Error!") + "\n");
+                    if (argument != null) {
+                        argument.forEach(item -> textArea.append(item + " "));
+                    } else {
+                        textArea.append("Command Error!");
+                    }
                     break;
                 case "exit":
                     System.exit(0);
