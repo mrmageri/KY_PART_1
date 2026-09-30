@@ -4,6 +4,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -110,11 +112,16 @@ public class ConsoleApp {
 
         textArea.append(user + command + "\n");
 
-        String argument = getArguments(command);
+        List<String> argument = getArguments(command);
         switch (getCommand(command.toLowerCase())) {
                 case "ls":
                     textArea.append("ls\n");
-                    textArea.append((argument != null ? argument: "Command Error!") + "\n");
+                    if (argument != null) {
+                        argument.forEach(item -> textArea.append(item + " "));
+                    } else {
+                        textArea.append("Command Error!");
+                    }
+                    textArea.append("\n");
                     break;
                 case "cd":
                     textArea.append("cd\n");
@@ -141,13 +148,16 @@ public class ConsoleApp {
         }
     }
 
-    private String getArguments(String command){
-        if(!command.contains(" ")) return null;
-        String argument = parseQuoted(command);
-        if(argument != null)return argument;
-        argument = command.substring(command.indexOf(" ")+1);
-        if(argument.isEmpty()) return null;
-        return argument;
+    private List<String> getArguments(String command) {
+        if (!command.contains(" ")) return null;
+        long quoteCount = command.chars().filter(ch -> ch == '"').count();
+        if (quoteCount % 2 != 0) return null;
+        String[] parts = command.trim().split("\\s+");
+        List<String> res = new ArrayList<>();
+        for (int i = 1; i < parts.length; i++) {
+            res.add(parts[i].contains("\"")? parseQuoted(parts[i]) : parts[i]);
+        }
+        return res.isEmpty() ? null : res;
     }
     /**
      * Извлекает текст, заключённый в двойные кавычки.
@@ -161,6 +171,6 @@ public class ConsoleApp {
         if (start == -1) return null;
         int end = command.indexOf('"', start + 1);
         if (end == -1) return null;
-        return command.substring(start + 1, end);
+        return command.substring(0,start) + command.substring(start + 1, end);
     }
 }
