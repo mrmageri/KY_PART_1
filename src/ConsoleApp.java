@@ -1,4 +1,7 @@
 import config.EmulatorConfig;
+import vfs.Vfs;
+import vfs.VfsCsvLoader;
+import vfs.VfsException;
 
 import javax.swing.*;
 import java.awt.*;
@@ -8,12 +11,12 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Эмулятор консоли с графическим интерфейсом на Swing.
- * Поддерживает команды ls, cd, exit, conf-dump.
  */
 public class ConsoleApp {
 
@@ -21,11 +24,11 @@ public class ConsoleApp {
     private final JTextField inputField;
     private final String user;
     private final EmulatorConfig config;
+    private Vfs vfs;
 
     private static final int FRAME_HEIGHT = 500;
     private static final int FRAME_WIDTH = 800;
     private static final int FONT_SIZE = 14;
-    private static final int QUOTE_PAIR = 2;
 
     /**
      * Создаёт окно эмулятора с заданной конфигурацией.
@@ -48,11 +51,22 @@ public class ConsoleApp {
 
         setupEnterListener();
         textArea.append("Console!\n");
+        loadVfs();
         dumpConfigAtStartup();
 
         frame.setVisible(true);
         inputField.requestFocusInWindow();
         runScript();
+    }
+
+    private void loadVfs() {
+        try {
+            vfs = VfsCsvLoader.load(config.vfsPath());
+            textArea.append("VFS loaded: " + config.vfsPath() + "\n");
+        } catch (VfsException e) {
+            vfs = null;
+            textArea.append("VFS load error: " + e.getMessage() + "\n");
+        }
     }
 
     private String resolveHostname() {
@@ -120,6 +134,10 @@ public class ConsoleApp {
         textArea.append("=== Configuration ===\n");
         textArea.append("vfs.path=" + config.vfsPath() + "\n");
         textArea.append("script.path=" + scriptPathText() + "\n");
+        textArea.append("vfs.loaded=" + (vfs != null) + "\n");
+        if (vfs != null) {
+            textArea.append("vfs.current=" + vfs.getCurrentPath() + "\n");
+        }
         textArea.append("=====================\n");
     }
 
@@ -146,6 +164,7 @@ public class ConsoleApp {
             case "ls" -> runLs(args);
             case "cd" -> runCd(args);
             case "conf-dump" -> runConfDump();
+            case "vfs-save" -> runVfsSave(args);
             case "exit" -> runExit();
             default -> runUnknown(command);
         };
@@ -154,13 +173,66 @@ public class ConsoleApp {
     }
 
     private boolean runLs(List<String> args) {
-        textArea.append("ls\n");
-        return printArgs(args);
+        if (vfs == null) {
+            textArea.append("VFS is not loaded\n");
+            return false;
+        }
+        if (args != null && args.size() > 1) {
+            textArea.append("ls: too many arguments\n");
+            return false;
+        }
+        String path = args == null || args.isEmpty()
+                ? vfs.getCurrentPath()
+                : args.get(0);
+        try {
+            String listing = vfs.list(path);
+            textArea.append(listing);
+            if (!listing.isEmpty() && !listing.endsWith("\n")) {
+                textArea.append("\n");
+            }
+            return true;
+        } catch (VfsException e) {
+            textArea.append("ls: " + e.getMessage() + "\n");
+            return false;
+        }
     }
 
+
     private boolean runCd(List<String> args) {
-        textArea.append("cd\n");
-        return printArgs(args);
+        if (vfs == null) {
+            textArea.append("VFS is not loaded\n");
+            return false;
+        }
+        if (args == null || args.size() != 1) {
+            textArea.append("cd: missing operand\n");
+            return false;
+        }
+        try {
+            vfs.changeDirectory(args.get(0));
+            return true;
+        } catch (VfsException e) {
+            textArea.append("cd: " + e.getMessage() + "\n");
+            return false;
+        }
+    }
+
+    private boolean runVfsSave(List<String> args) {
+        if (vfs == null) {
+            textArea.append("VFS is not loaded\n");
+            return false;
+        }
+        if (args == null || args.size() != 1) {
+            textArea.append("vfs-save: missing path\n");
+            return false;
+        }
+        try {
+            vfs.save(Path.of(args.get(0)));
+            textArea.append("VFS saved to " + args.get(0) + "\n");
+            return true;
+        } catch (VfsException e) {
+            textArea.append("vfs-save: " + e.getMessage() + "\n");
+            return false;
+        }
     }
 
     private boolean printArgs(List<String> args) {
@@ -178,6 +250,10 @@ public class ConsoleApp {
     private boolean runConfDump() {
         textArea.append("vfs.path=" + config.vfsPath() + "\n");
         textArea.append("script.path=" + scriptPathText() + "\n");
+        textArea.append("vfs.loaded=" + (vfs != null) + "\n");
+        if (vfs != null) {
+            textArea.append("vfs.current=" + vfs.getCurrentPath() + "\n");
+        }
         return true;
     }
 
@@ -203,39 +279,35 @@ public class ConsoleApp {
         if (!command.contains(" ")) {
             return null;
         }
-        long quoteCount = command.chars().filter(ch -> ch == '"').count();
-        if (quoteCount % QUOTE_PAIR != 0) {
-            return null;
-        }
-        String[] parts = command.trim().split("\\s+");
         List<String> result = new ArrayList<>();
-        for (int i = 1; i < parts.length; i++) {
-            result.add(parts[i].contains("\"")
-                    ? parseQuoted(parts[i])
-                    : parts[i]);
+        StringBuilder current = new StringBuilder();
+        boolean inQuotes = false;
+        for (int i = 0; i < command.length(); i++) {
+            char ch = command.charAt(i);
+            if (ch == '"') {
+                inQuotes = !inQuotes;
+                continue;
+            }
+            if (Character.isWhitespace(ch) && !inQuotes) {
+                if (!current.isEmpty()) {
+                    result.add(current.toString());
+                    current.setLength(0);
+                }
+            } else {
+                current.append(ch);
+            }
         }
+        if (inQuotes) {
+            return null;
+        }
+        if (!current.isEmpty()) {
+            result.add(current.toString());
+        }
+        if (result.isEmpty()) {
+            return null;
+        }
+        result.removeFirst();
         return result.isEmpty() ? null : result;
-    }
-
-    /**
-     * Извлекает текст, заключённый в двойные кавычки.
-     *
-     * @param command строка для разбора
-     * @return содержимое кавычек или {@code null}, если кавычек нет
-     */
-    private String parseQuoted(String command) {
-        if (command == null) {
-            return null;
-        }
-        int start = command.indexOf('"');
-        if (start == -1) {
-            return null;
-        }
-        int end = command.indexOf('"', start + 1);
-        if (end == -1) {
-            return null;
-        }
-        return command.substring(0, start) + command.substring(start + 1, end);
     }
 
     private void runScript() {

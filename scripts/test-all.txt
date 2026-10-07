@@ -1,4 +1,13 @@
-ls p
+ls
+ls /
 cd /home
+ls
+cd user
+ls
+cd docs
+ls
+cd notes
+ls
+cd /
 conf-dump
-exit
+vfs-save ./vfs/saved.csv

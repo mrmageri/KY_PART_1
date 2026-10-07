@@ -11,7 +11,7 @@ public class ConsoleAppTest {
         testParseBoth();
         testParseOnlyVfs();
         testMissingVfs();
-        System.out.println("Все тесты пройдены");
+        System.out.println("Console tests passed");
     }
 
     private static void testParseBoth() {

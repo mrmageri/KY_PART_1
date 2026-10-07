@@ -1,14 +1,21 @@
 # K-Y-part-1
 
-Эмулятор консоли на Java (Swing) с поддержкой параметров
-командной строки и стартовых скриптов.
+Эмулятор консоли UNIX-подобной ОС на Java (Swing) с виртуальной
+файловой системой, параметрами командной строки и стартовыми скриптами.
 
 ## Возможности
 
-- Команды `ls`, `cd`, `exit`, `conf-dump`
-- Параметры `--vfs` и `--script`
+- Графический интерфейс на Swing, имитирующий консоль
+- Заголовок окна вида `Эмулятор - username@hostname`
+- Парсер аргументов с поддержкой двойных кавычек
+- Команды `ls`, `cd`, `exit`, `conf-dump`, `vfs-save`
+- Виртуальная файловая система (VFS) в памяти
+- Загрузка VFS из CSV-файла
+- Поддержка текстовых и бинарных данных (base64)
+- Сохранение состояния VFS обратно в CSV
+- Параметры командной строки `--vfs` и `--script`
 - Отладочный вывод конфигурации при запуске
-- Выполнение скрипта с остановкой при первой ошибке
+- Стартовый скрипт с остановкой при первой ошибке
 
 ## Требования
 
@@ -18,58 +25,29 @@
 
 | Параметр | Обязательный | Описание |
 |---|---|---|
-| `--vfs <путь>` | да | Путь к VFS |
+| `--vfs <путь>` | да | Путь к CSV-файлу VFS или к каталогу с CSV |
 | `--script <путь>` | нет | Путь к стартовому скрипту |
+
+Если `--vfs` указывает на каталог, загрузчик ищет в нём `vfs.csv`,
+а при его отсутствии — первый по алфавиту файл `*.csv`.
 
 ## Команды
 
 | Команда | Описание |
 |---|---|
-| `ls` | Вывести аргументы |
-| `cd <путь>` | Вывести аргументы |
+| `ls [путь]` | Вывести содержимое каталога VFS |
+| `cd <путь>` | Перейти в каталог VFS |
 | `conf-dump` | Показать параметры в формате ключ-значение |
+| `vfs-save <путь>` | Сохранить состояние VFS в CSV-файл |
 | `exit` | Закрыть приложение |
 
+## Формат VFS
 
-## Запуск
+Источником VFS является CSV-файл со следующей структурой:
 
-```bash
-java -cp out/production/KY_PART_1 Main --vfs ./vfs
-java -cp out/production/KY_PART_1 Main --vfs ./vfs --script ./scripts/test-all.txt
-```
-
-## Тесты
-
-```bash
-javac -d out/production/KY_PART_1 tests/ConsoleAppTest.java
-java -cp out/production/KY_PART_1 ConsoleAppTest
-```
-
-Ожидаемый вывод: `Все тесты пройдены`.
-
-## Скрипты ОС
-
-- `scripts/run.sh` — Linux/macOS
-- `scripts/run-windows.bat` — Windows
-
-Оба тестируют запуск с `--vfs` и с `--vfs --script`.
-
-## Скрипты эмулятора
-
-- `scripts/test-all.txt` — успешный сценарий
-- `scripts/test-error.txt` — остановка при первой ошибке
-
-## Пример
-
-```
-=== Configuration ===
-vfs.path=./vfs
-script.path=./scripts/test-all.txt
-=====================
-roman@Mageri-2:ls
-ls
-
-roman@Mageri-2:conf-dump
-vfs.path=./vfs
-script.path=./scripts/test-all.txt
-```
+```csv
+type,path,content,encoding
+dir,/,,
+dir,/home,,
+file,/home/readme.txt,Hello,plain
+file,/bin/data.bin,AAECAwQ=,base64

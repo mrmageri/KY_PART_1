@@ -2,9 +2,9 @@ import config.EmulatorConfig;
 
 import javax.swing.*;
 /**
- * Запускает эмулятор с параметрами командной строки.
+ * Запускает эмулятор.
  *
- * @param args аргументы: --vfs &lt;путь&gt; [--script &lt;путь&gt;]
+ * @param args аргументы командной строки
  */
 void main(String[] args) {
     EmulatorConfig config = EmulatorConfig.parse(args);

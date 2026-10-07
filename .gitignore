@@ -8,6 +8,11 @@
 out/
 vfs/
 
+*.class
+*.log
+.vscode/
+vfs/saved.csv
+
 ### Eclipse ###
 .apt_generated
 .classpath

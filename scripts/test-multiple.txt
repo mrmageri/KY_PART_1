@@ -1,0 +1,5 @@
+ls
+cd /home/user
+ls
+vfs-save ./vfs/saved.csv
+exit
