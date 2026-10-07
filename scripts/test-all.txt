@@ -1,0 +1,4 @@
+ls p
+cd /home
+conf-dump
+exit
