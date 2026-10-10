@@ -1,0 +1,13 @@
+pwd
+ls
+cd /home
+pwd
+ls
+echo "Hello from echo"
+echo
+echo one two three
+cd ..
+pwd
+clear
+pwd
+cd /no/such/path

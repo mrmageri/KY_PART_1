@@ -163,6 +163,9 @@ public class ConsoleApp {
         boolean result = switch (name) {
             case "ls" -> runLs(args);
             case "cd" -> runCd(args);
+            case "pwd" -> runPwd();
+            case "clear" -> runClear();
+            case "echo" -> runEcho(args);
             case "conf-dump" -> runConfDump();
             case "vfs-save" -> runVfsSave(args);
             case "exit" -> runExit();
@@ -254,6 +257,29 @@ public class ConsoleApp {
         if (vfs != null) {
             textArea.append("vfs.current=" + vfs.getCurrentPath() + "\n");
         }
+        return true;
+    }
+
+    private boolean runPwd() {
+        if (vfs == null) {
+            textArea.append("VFS is not loaded\n");
+            return false;
+        }
+        textArea.append(vfs.getCurrentPath() + "\n");
+        return true;
+    }
+
+    private boolean runClear() {
+        textArea.setText("");
+        return true;
+    }
+
+    private boolean runEcho(List<String> args) {
+        if (args == null || args.isEmpty()) {
+            textArea.append("\n");
+            return true;
+        }
+        textArea.append(String.join(" ", args) + "\n");
         return true;
     }
 
