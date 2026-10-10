@@ -3,14 +3,15 @@
 !**/src/test/**/out/
 .kotlin
 
-.idea/
-*.iml
-out/
-vfs/
 
 *.class
 *.log
 .vscode/
+out/
+# IDE
+.idea/
+*.iml
+# Сгенерированный VFS
 vfs/saved.csv
 
 ### Eclipse ###

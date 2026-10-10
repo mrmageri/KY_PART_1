@@ -1,0 +1,8 @@
+type,path,content,encoding
+dir,/,,
+dir,/home,,
+dir,/home/user,,
+dir,/etc,,
+file,/home/user/readme.txt,Hello user,plain
+file,/etc/hosts,127.0.0.1 localhost,plain
+file,/bin/data.bin,AAECAwQ=,base64

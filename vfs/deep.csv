@@ -1,0 +1,8 @@
+type,path,content,encoding
+dir,/,,
+dir,/home,,
+dir,/home/user,,
+dir,/home/user/docs,,
+dir,/home/user/docs/notes,,
+file,/home/user/docs/notes/deep.txt,Deep file,plain
+file,/home/user/docs/readme.md,# Docs,plain

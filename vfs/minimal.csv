@@ -1,0 +1,4 @@
+type,path,content,encoding
+dir,/,,
+dir,/home,,
+file,/home/readme.txt,Minimal VFS,plain
