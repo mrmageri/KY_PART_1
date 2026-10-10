@@ -186,7 +186,7 @@ public class ConsoleApp {
         }
         String path = args == null || args.isEmpty()
                 ? vfs.getCurrentPath()
-                : args.get(0);
+                : args.getFirst();
         try {
             String listing = vfs.list(path);
             textArea.append(listing);
@@ -211,7 +211,7 @@ public class ConsoleApp {
             return false;
         }
         try {
-            vfs.changeDirectory(args.get(0));
+            vfs.changeDirectory(args.getFirst());
             return true;
         } catch (VfsException e) {
             textArea.append("cd: " + e.getMessage() + "\n");
@@ -229,25 +229,13 @@ public class ConsoleApp {
             return false;
         }
         try {
-            vfs.save(Path.of(args.get(0)));
-            textArea.append("VFS saved to " + args.get(0) + "\n");
+            vfs.save(Path.of(args.getFirst()));
+            textArea.append("VFS saved to " + args.getFirst() + "\n");
             return true;
         } catch (VfsException e) {
             textArea.append("vfs-save: " + e.getMessage() + "\n");
             return false;
         }
-    }
-
-    private boolean printArgs(List<String> args) {
-        if (args == null) {
-            textArea.append("Command Error!\n");
-            return false;
-        }
-        for (String item : args) {
-            textArea.append(item + " ");
-        }
-        textArea.append("\n");
-        return true;
     }
 
     private boolean runConfDump() {
