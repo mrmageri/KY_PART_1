@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Base64;
 import java.util.Deque;
+import java.util.regex.Pattern;
 
 /**
  * Виртуальная файловая система в памяти.
@@ -18,6 +19,8 @@ public class Vfs {
 
     private final VfsNode root = new VfsNode("", true);
     private String currentPath = ROOT;
+
+    private static final Pattern PERMISSION_PATTERN = Pattern.compile("[0-7]{3}");
 
     public String getCurrentPath() {
         return currentPath;
@@ -116,12 +119,6 @@ public class Vfs {
         currentPath = normalize(path);
     }
 
-    /**
-     * Сохраняет VFS в CSV.
-     *
-     * @param target целевой файл
-     * @throws VfsException при ошибке
-     */
     public void save(Path target) throws VfsException {
         try {
             Path parent = target.toAbsolutePath().getParent();
@@ -130,8 +127,8 @@ public class Vfs {
             }
             try (PrintWriter out = new PrintWriter(
                     Files.newBufferedWriter(target, StandardCharsets.UTF_8))) {
-                out.println("type,path,content,encoding");
-                out.println("dir,/,,");
+                out.println("type,path,content,encoding,permissions");
+                out.println("dir,/,,," + root.getPermissions());
                 for (VfsNode child : root.getChildren()) {
                     saveNode(child, ROOT, out);
                 }
@@ -146,7 +143,7 @@ public class Vfs {
                 ? ROOT + node.getName()
                 : parentPath + ROOT + node.getName();
         if (node.isDirectory()) {
-            out.println("dir," + csv(path) + ",,");
+            out.println("dir," + csv(path) + ",,," + node.getPermissions());
             for (VfsNode child : node.getChildren()) {
                 saveNode(child, path, out);
             }
@@ -155,7 +152,8 @@ public class Vfs {
                     ? Base64.getEncoder().encodeToString(node.getData())
                     : new String(node.getData(), StandardCharsets.UTF_8);
             String encoding = node.isBase64() ? "base64" : "plain";
-            out.println("file," + csv(path) + "," + csv(content) + "," + encoding);
+            out.println("file," + csv(path) + "," + csv(content) + ","
+                    + encoding + "," + node.getPermissions());
         }
     }
 
@@ -214,5 +212,51 @@ public class Vfs {
             return "\"" + value.replace("\"", "\"\"") + "\"";
         }
         return value;
+    }
+
+    /**
+     * Меняет права доступа узла.
+     *
+     * @param path путь
+     * @param mode трёхзначный восьмеричный режим (например, {@code 644})
+     * @throws VfsException при ошибке
+     */
+    public void changePermissions(String path, String mode) throws VfsException {
+        if (mode == null || !PERMISSION_PATTERN.matcher(mode).matches()) {
+            throw new VfsException("Неверный режим: " + mode);
+        }
+        VfsNode node = resolveNode(path);
+        node.setPermissions(mode);
+    }
+
+    /**
+     * Создаёт пустой файл, если его нет.
+     * Существующий файл оставляет без изменений.
+     *
+     * @param path путь
+     * @throws VfsException при ошибке
+     */
+    public void touch(String path) throws VfsException {
+        String normalized = normalize(path);
+        if (ROOT.equals(normalized)) {
+            throw new VfsException("Нельзя создать файл в корне");
+        }
+        VfsNode existing = tryResolve(normalized);
+        if (existing != null) {
+            if (existing.isDirectory()) {
+                throw new VfsException("Это каталог: " + path);
+            }
+            return;
+        }
+        resolveNode(parentPath(normalized));
+        addFile(normalized, new byte[0], false);
+    }
+
+    private VfsNode tryResolve(String path) {
+        try {
+            return resolveNode(path);
+        } catch (VfsException e) {
+            return null;
+        }
     }
 }

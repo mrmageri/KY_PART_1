@@ -9,12 +9,16 @@ import java.util.TreeMap;
  */
 public class VfsNode {
 
+    private static final String DEFAULT_DIR_PERMISSIONS = "755";
+    private static final String DEFAULT_FILE_PERMISSIONS = "644";
+
     private final String name;
     private final boolean directory;
     private final Map<String, VfsNode> children = new TreeMap<>();
     private VfsNode parent;
     private byte[] data = new byte[0];
     private boolean base64;
+    private String permissions;
 
     /**
      * Создаёт узел.
@@ -25,6 +29,9 @@ public class VfsNode {
     public VfsNode(String name, boolean directory) {
         this.name = name;
         this.directory = directory;
+        this.permissions = directory
+                ? DEFAULT_DIR_PERMISSIONS
+                : DEFAULT_FILE_PERMISSIONS;
     }
 
     public String getName() {
@@ -69,5 +76,13 @@ public class VfsNode {
 
     public void setBase64(boolean base64) {
         this.base64 = base64;
+    }
+
+    public String getPermissions() {
+        return permissions;
+    }
+
+    public void setPermissions(String permissions) {
+        this.permissions = permissions;
     }
 }

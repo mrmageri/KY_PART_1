@@ -1,0 +1,11 @@
+pwd
+ls
+touch /home/newfile.txt
+ls /home
+touch /home/newfile.txt
+chmod 600 /home/newfile.txt
+chmod 700 /home
+ls /home
+pwd
+vfs-save ./vfs/saved-stage5.csv
+chmod 999 /home/newfile.txt

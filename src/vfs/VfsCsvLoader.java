@@ -107,6 +107,7 @@ public final class VfsCsvLoader {
         String path = fields.get(1).trim();
         String content = fields.size() > 2 ? fields.get(2) : "";
         String encoding = fields.size() > 3 ? fields.get(3).trim() : "plain";
+        String permissions = fields.size() > 4 ? fields.get(4).trim() : "";
         if ("dir".equalsIgnoreCase(type)) {
             vfs.ensureDirectory(path);
         } else if ("file".equalsIgnoreCase(type)) {
@@ -114,6 +115,9 @@ public final class VfsCsvLoader {
             vfs.addFile(path, decode(content, base64, lineNo), base64);
         } else {
             throw new VfsException("Неизвестный тип узла: " + type);
+        }
+        if (!permissions.isEmpty()) {
+            vfs.changePermissions(path, permissions);
         }
     }
 

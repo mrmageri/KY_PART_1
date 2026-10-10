@@ -168,6 +168,8 @@ public class ConsoleApp {
             case "echo" -> runEcho(args);
             case "conf-dump" -> runConfDump();
             case "vfs-save" -> runVfsSave(args);
+            case "chmod" -> runChmod(args);
+            case "touch" -> runTouch(args);
             case "exit" -> runExit();
             default -> runUnknown(command);
         };
@@ -215,6 +217,42 @@ public class ConsoleApp {
             return true;
         } catch (VfsException e) {
             textArea.append("cd: " + e.getMessage() + "\n");
+            return false;
+        }
+    }
+
+    private boolean runChmod(List<String> args) {
+        if (vfs == null) {
+            textArea.append("VFS is not loaded\n");
+            return false;
+        }
+        if (args == null || args.size() != 2) {
+            textArea.append("chmod: usage: chmod <mode> <path>\n");
+            return false;
+        }
+        try {
+            vfs.changePermissions(args.get(1), args.get(0));
+            return true;
+        } catch (VfsException e) {
+            textArea.append("chmod: " + e.getMessage() + "\n");
+            return false;
+        }
+    }
+
+    private boolean runTouch(List<String> args) {
+        if (vfs == null) {
+            textArea.append("VFS is not loaded\n");
+            return false;
+        }
+        if (args == null || args.size() != 1) {
+            textArea.append("touch: missing operand\n");
+            return false;
+        }
+        try {
+            vfs.touch(args.getFirst());
+            return true;
+        } catch (VfsException e) {
+            textArea.append("touch: " + e.getMessage() + "\n");
             return false;
         }
     }
