@@ -339,21 +339,28 @@ public class ConsoleApp {
         if (config.scriptPath() == null) {
             return;
         }
+
         try {
-            List<String> lines = Files.readAllLines(config.scriptPath());
-            for (String line : lines) {
-                String command = line.trim();
-                if (command.isEmpty() || command.startsWith("#")) {
-                    continue;
-                }
-                if (!processCommand(command)) {
-                    textArea.append(
-                            "Script stopped due to error: " + command + "\n");
-                    return;
-                }
-            }
+            processLines(Files.readAllLines(config.scriptPath()));
         } catch (IOException e) {
             textArea.append("Script error: " + e.getMessage() + "\n");
         }
+    }
+
+    private void processLines(List<String> lines) {
+        for (String line : lines) {
+            String command = line.trim();
+            if (shouldSkip(command)) {
+                continue;
+            }
+            if (!processCommand(command)) {
+                textArea.append("Script stopped due to error: " + command + "\n");
+                return;
+            }
+        }
+    }
+
+    private boolean shouldSkip(String command) {
+        return command.isEmpty() || command.startsWith("#");
     }
 }
