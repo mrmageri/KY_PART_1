@@ -36,7 +36,6 @@ public class ConsoleAppTest {
             EmulatorConfig.parse(new String[]{});
             throw new AssertionError("Ожидалось исключение");
         } catch (IllegalArgumentException expected) {
-            // ок
         }
     }
 

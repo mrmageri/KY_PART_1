@@ -17,6 +17,7 @@ public final class VfsCsvLoader {
 
     private static final String DEFAULT_CSV = "vfs.csv";
     private static final String CSV_EXT = ".csv";
+    private static final int MIN_SIZE = 2;
 
     private VfsCsvLoader() {
     }
@@ -100,13 +101,13 @@ public final class VfsCsvLoader {
 
     private static void loadRow(Vfs vfs, List<String> fields, int lineNo)
             throws VfsException {
-        if (fields.size() < 2) {
+        if (fields.size() < MIN_SIZE) {
             throw new VfsException("Неверный формат CSV, строка " + lineNo);
         }
-        String type = fields.get(0).trim();
-        String path = fields.get(1).trim();
-        String content = fields.size() > 2 ? fields.get(2) : "";
-        String encoding = fields.size() > 3 ? fields.get(3).trim() : "plain";
+        String type = fields.getFirst().trim();
+        String path = fields.get(MIN_SIZE-1).trim();
+        String content = fields.size() > MIN_SIZE ? fields.get(MIN_SIZE) : "";
+        String encoding = fields.size() > MIN_SIZE+1 ? fields.get(MIN_SIZE+1).trim() : "plain";
         if ("dir".equalsIgnoreCase(type)) {
             vfs.ensureDirectory(path);
         } else if ("file".equalsIgnoreCase(type)) {
