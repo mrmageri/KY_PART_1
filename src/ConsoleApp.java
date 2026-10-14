@@ -297,14 +297,11 @@ public class ConsoleApp {
                 current.append(ch);
             }
         }
-        if (inQuotes) {
+        if (inQuotes || result.isEmpty()) {
             return null;
         }
         if (!current.isEmpty()) {
             result.add(current.toString());
-        }
-        if (result.isEmpty()) {
-            return null;
         }
         result.removeFirst();
         return result.isEmpty() ? null : result;
