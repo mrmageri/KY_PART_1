@@ -331,36 +331,48 @@ public class ConsoleApp {
         if (!command.contains(" ")) {
             return null;
         }
+
+        List<String> tokens = parseTokens(command);
+        if (tokens == null || tokens.size() <= 1) {
+            return null;
+        }
+
+        tokens.removeFirst();
+        return tokens;
+    }
+
+    private List<String> parseTokens(String command) {
         List<String> result = new ArrayList<>();
         StringBuilder current = new StringBuilder();
         boolean inQuotes = false;
+
         for (int i = 0; i < command.length(); i++) {
             char ch = command.charAt(i);
+
             if (ch == '"') {
                 inQuotes = !inQuotes;
-                continue;
-            }
-            if (Character.isWhitespace(ch) && !inQuotes) {
-                if (!current.isEmpty()) {
-                    result.add(current.toString());
-                    current.setLength(0);
-                }
+            } else if (Character.isWhitespace(ch) && !inQuotes) {
+                addToken(result, current);
             } else {
                 current.append(ch);
             }
         }
+
         if (inQuotes) {
             return null;
         }
+
+        addToken(result, current);
+        return result;
+    }
+
+    private void addToken(List<String> result, StringBuilder current) {
         if (!current.isEmpty()) {
             result.add(current.toString());
+            current.setLength(0);
         }
-        if (result.isEmpty()) {
-            return null;
-        }
-        result.removeFirst();
-        return result.isEmpty() ? null : result;
     }
+
 
     private void runScript() {
         if (config.scriptPath() == null) {
