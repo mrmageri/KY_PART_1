@@ -5,9 +5,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayDeque;
-import java.util.Base64;
-import java.util.Deque;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -19,12 +17,14 @@ public class Vfs {
 
     private final VfsNode root = new VfsNode("", true);
     private String currentPath = ROOT;
+    private static final int ZERO = 0;
 
     private static final Pattern PERMISSION_PATTERN = Pattern.compile("[0-7]{3}");
 
     public String getCurrentPath() {
         return currentPath;
     }
+
 
     /**
      * Создаёт каталог и все его родительские каталоги.
@@ -258,5 +258,38 @@ public class Vfs {
         } catch (VfsException e) {
             return null;
         }
+    }
+    /**
+     * Запись листинга каталога.
+     */
+    public record VfsEntry(
+            String name,
+            boolean directory,
+            long size,
+            String permissions) {
+    }
+
+    /**
+     * Возвращает структурированный листинг каталога.
+     *
+     * @param path путь
+     * @return записи каталога
+     * @throws VfsException при ошибке
+     */
+    public List<VfsEntry> listEntries(String path) throws VfsException {
+        VfsNode node = resolveNode(path);
+        if (!node.isDirectory()) {
+            throw new VfsException("Не каталог: " + path);
+        }
+        List<VfsEntry> result = new ArrayList<>();
+        for (VfsNode child : node.getChildren()) {
+            long size = child.isDirectory() ? ZERO : child.getData().length;
+            result.add(new VfsEntry(
+                    child.getName(),
+                    child.isDirectory(),
+                    size,
+                    child.getPermissions()));
+        }
+        return result;
     }
 }
