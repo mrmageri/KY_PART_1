@@ -160,7 +160,13 @@ public class ConsoleApp {
         textArea.append(user + command + "\n");
         List<String> args = getArguments(command);
         String name = getCommand(command.toLowerCase());
-        boolean result = switch (name) {
+        boolean result = executeCommand(name, args, command);
+        textArea.setCaretPosition(textArea.getDocument().getLength());
+        return result;
+    }
+
+    private boolean executeCommand(String name, List<String> args, String command) {
+        return switch (name) {
             case "ls" -> runLs(args);
             case "cd" -> runCd(args);
             case "pwd" -> runPwd();
@@ -171,8 +177,6 @@ public class ConsoleApp {
             case "exit" -> runExit();
             default -> runUnknown(command);
         };
-        textArea.setCaretPosition(textArea.getDocument().getLength());
-        return result;
     }
 
     private boolean runLs(List<String> args) {
