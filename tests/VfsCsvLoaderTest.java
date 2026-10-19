@@ -47,7 +47,6 @@ public class VfsCsvLoaderTest {
                 StandardCharsets.UTF_8);
 
         Vfs vfs = VfsCsvLoader.load(csv);
-        // Проверяем, что загрузка не упала.
         if (vfs == null) {
             throw new AssertionError("VFS is null");
         }
@@ -59,7 +58,6 @@ public class VfsCsvLoaderTest {
             VfsCsvLoader.load(Path.of("no-such-file.csv"));
             throw new AssertionError("Expected VfsException");
         } catch (VfsException expected) {
-            // ок
         }
     }
 
