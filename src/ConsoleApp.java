@@ -29,6 +29,7 @@ public class ConsoleApp {
     private static final int FRAME_HEIGHT = 500;
     private static final int FRAME_WIDTH = 800;
     private static final int FONT_SIZE = 14;
+    private static final int MIN_SIZE = 2;
 
     /**
      * Создаёт окно эмулятора с заданной конфигурацией.
@@ -160,7 +161,13 @@ public class ConsoleApp {
         textArea.append(user + command + "\n");
         List<String> args = getArguments(command);
         String name = getCommand(command.toLowerCase());
-        boolean result = switch (name) {
+        boolean result = executeCommand(name, args, command);
+        textArea.setCaretPosition(textArea.getDocument().getLength());
+        return result;
+    }
+
+    private boolean executeCommand(String name, List<String> args, String command) {
+        return switch (name) {
             case "ls" -> runLs(args);
             case "cd" -> runCd(args);
             case "pwd" -> runPwd();
@@ -168,13 +175,9 @@ public class ConsoleApp {
             case "echo" -> runEcho(args);
             case "conf-dump" -> runConfDump();
             case "vfs-save" -> runVfsSave(args);
-            case "chmod" -> runChmod(args);
-            case "touch" -> runTouch(args);
             case "exit" -> runExit();
             default -> runUnknown(command);
         };
-        textArea.setCaretPosition(textArea.getDocument().getLength());
-        return result;
     }
 
     private boolean runLs(List<String> args) {
@@ -226,12 +229,12 @@ public class ConsoleApp {
             textArea.append("VFS is not loaded\n");
             return false;
         }
-        if (args == null || args.size() != 2) {
+        if (args == null || args.size() != MIN_SIZE) {
             textArea.append("chmod: usage: chmod <mode> <path>\n");
             return false;
         }
         try {
-            vfs.changePermissions(args.get(1), args.get(0));
+            vfs.changePermissions(args.get(MIN_SIZE-1), args.getFirst());
             return true;
         } catch (VfsException e) {
             textArea.append("chmod: " + e.getMessage() + "\n");
